@@ -19,6 +19,7 @@ export default {
     },
     extend: {
       colors: {
+        border: "hsl(var(--border))",
         background: {
           start: "#1A1B25",
           end: "#2A2B35",
