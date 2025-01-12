@@ -54,7 +54,7 @@ const AlarmDialog = ({ open, onOpenChange, onSave }: AlarmDialogProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px] bg-background-end text-text-primary">
+      <DialogContent className="sm:max-w-[425px] bg-card">
         <DialogHeader>
           <DialogTitle>Nouvelle alarme</DialogTitle>
         </DialogHeader>
@@ -66,7 +66,7 @@ const AlarmDialog = ({ open, onOpenChange, onSave }: AlarmDialogProps) => {
               type="time"
               value={time}
               onChange={(e) => setTime(e.target.value)}
-              className="bg-white/5"
+              className="bg-muted/5"
             />
           </div>
           <div className="grid gap-2">
@@ -81,7 +81,7 @@ const AlarmDialog = ({ open, onOpenChange, onSave }: AlarmDialogProps) => {
                 <ToggleGroupItem
                   key={day.value}
                   value={day.value}
-                  className="w-9 h-9 data-[state=on]:bg-accent"
+                  className="w-9 h-9 data-[state=on]:bg-primary"
                 >
                   {day.label}
                 </ToggleGroupItem>
@@ -96,7 +96,7 @@ const AlarmDialog = ({ open, onOpenChange, onSave }: AlarmDialogProps) => {
                   key={image}
                   className={`relative aspect-video rounded-lg overflow-hidden cursor-pointer ${
                     selectedImage === image
-                      ? "ring-2 ring-accent"
+                      ? "ring-2 ring-primary"
                       : "ring-1 ring-white/10"
                   }`}
                   onClick={() => setSelectedImage(image)}
@@ -111,7 +111,7 @@ const AlarmDialog = ({ open, onOpenChange, onSave }: AlarmDialogProps) => {
             </div>
           </div>
         </div>
-        <Button onClick={handleSave} className="w-full bg-accent">
+        <Button onClick={handleSave} className="w-full bg-primary">
           Sauvegarder
         </Button>
       </DialogContent>

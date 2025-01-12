@@ -10,7 +10,7 @@ const AddAlarmButton = ({ onClick }: AddAlarmButtonProps) => {
   return (
     <Button
       onClick={onClick}
-      className="fixed bottom-8 right-8 w-14 h-14 rounded-full bg-accent hover:bg-accent/90 shadow-lg"
+      className="fixed bottom-8 right-8 w-14 h-14 rounded-full bg-primary hover:bg-primary/90 shadow-lg"
     >
       <Plus className="h-6 w-6" />
     </Button>

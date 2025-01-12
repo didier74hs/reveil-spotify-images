@@ -50,10 +50,10 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background-start to-background-end text-text-primary p-6">
+    <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 text-white p-6">
       <h1 className="text-3xl font-bold mb-8">Mes alarmes</h1>
       {alarms.length === 0 ? (
-        <div className="text-center text-text-secondary py-12">
+        <div className="text-center text-muted-foreground py-12">
           <p>Aucune alarme configurée</p>
           <p className="text-sm">Cliquez sur le bouton + pour commencer</p>
         </div>

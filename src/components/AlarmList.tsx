@@ -29,15 +29,15 @@ const AlarmList = ({ alarms, onDelete, onToggle }: AlarmListProps) => {
       {alarms.map((alarm) => (
         <div
           key={alarm.id}
-          className="bg-white/5 backdrop-blur-lg rounded-lg p-4 flex items-center justify-between animate-slide-up"
+          className="bg-card/5 backdrop-blur-lg rounded-lg p-4 flex items-center justify-between animate-slide-up"
         >
           <div className="flex items-center space-x-4">
-            <Clock className="text-accent h-6 w-6" />
+            <Clock className="text-primary h-6 w-6" />
             <div>
-              <h3 className="text-text-primary text-xl font-semibold">
+              <h3 className="text-foreground text-xl font-semibold">
                 {alarm.time}
               </h3>
-              <p className="text-text-secondary text-sm">
+              <p className="text-muted-foreground text-sm">
                 {getDaysString(alarm.days)}
               </p>
             </div>
@@ -51,7 +51,7 @@ const AlarmList = ({ alarms, onDelete, onToggle }: AlarmListProps) => {
               variant="ghost"
               size="icon"
               onClick={() => onDelete(alarm.id)}
-              className="text-text-secondary hover:text-destructive"
+              className="text-muted-foreground hover:text-destructive"
             >
               <Trash2 className="h-5 w-5" />
             </Button>
