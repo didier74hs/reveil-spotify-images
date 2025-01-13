@@ -1,5 +1,5 @@
 import React from "react";
-import { Clock, Trash2 } from "lucide-react";
+import { Clock, Trash2, Edit } from "lucide-react";
 import { Button } from "./ui/button";
 import { Switch } from "./ui/switch";
 
@@ -9,15 +9,18 @@ export interface Alarm {
   days: string[];
   isActive: boolean;
   image: string;
+  soundUrl?: string;
+  spotifyPlaylistUrl?: string;
 }
 
 interface AlarmListProps {
   alarms: Alarm[];
   onDelete: (id: string) => void;
   onToggle: (id: string) => void;
+  onEdit: (alarm: Alarm) => void;
 }
 
-const AlarmList = ({ alarms, onDelete, onToggle }: AlarmListProps) => {
+const AlarmList = ({ alarms, onDelete, onToggle, onEdit }: AlarmListProps) => {
   const getDaysString = (days: string[]) => {
     if (days.length === 7) return "Tous les jours";
     if (days.length === 0) return "Une fois";
@@ -47,6 +50,14 @@ const AlarmList = ({ alarms, onDelete, onToggle }: AlarmListProps) => {
               checked={alarm.isActive}
               onCheckedChange={() => onToggle(alarm.id)}
             />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onEdit(alarm)}
+              className="text-muted-foreground hover:text-primary"
+            >
+              <Edit className="h-5 w-5" />
+            </Button>
             <Button
               variant="ghost"
               size="icon"

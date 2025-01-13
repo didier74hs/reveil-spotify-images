@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Alarm } from "@/components/AlarmList";
 import AlarmList from "@/components/AlarmList";
 import AddAlarmButton from "@/components/AddAlarmButton";
@@ -11,39 +11,95 @@ const Index = () => {
     return savedAlarms ? JSON.parse(savedAlarms) : [];
   });
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingAlarm, setEditingAlarm] = useState<Alarm | undefined>();
   const { toast } = useToast();
+  const [activeAlarm, setActiveAlarm] = useState<Alarm | null>(null);
 
-  const handleAddAlarm = ({
-    time,
-    days,
-    image,
-  }: {
-    time: string;
-    days: string[];
-    image: string;
-  }) => {
-    const newAlarm: Alarm = {
-      id: Date.now().toString(),
-      time,
-      days,
-      isActive: true,
-      image,
+  useEffect(() => {
+    const checkAlarms = () => {
+      const now = new Date();
+      const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      const currentDay = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'][now.getDay()];
+
+      alarms.forEach((alarm) => {
+        if (
+          alarm.isActive &&
+          alarm.time === currentTime &&
+          (alarm.days.length === 0 || alarm.days.includes(currentDay))
+        ) {
+          triggerAlarm(alarm);
+        }
+      });
     };
-    const updatedAlarms = [...alarms, newAlarm];
-    setAlarms(updatedAlarms);
-    localStorage.setItem("alarms", JSON.stringify(updatedAlarms));
-    
-    toast({
-      title: "Alarme ajoutée",
-      description: `Nouvelle alarme configurée pour ${time}`,
-    });
+
+    const interval = setInterval(checkAlarms, 1000);
+    return () => clearInterval(interval);
+  }, [alarms]);
+
+  const triggerAlarm = async (alarm: Alarm) => {
+    setActiveAlarm(alarm);
+    document.body.style.backgroundImage = `url(${alarm.image})`;
+    document.body.style.backgroundSize = 'cover';
+    document.body.style.backgroundPosition = 'center';
+
+    try {
+      let audio: HTMLAudioElement;
+      
+      if (alarm.spotifyPlaylistUrl) {
+        // Intégration Spotify - Nécessite une authentification
+        window.open(alarm.spotifyPlaylistUrl, '_blank');
+      } else if (alarm.soundUrl) {
+        audio = new Audio(alarm.soundUrl);
+        await audio.play();
+      } else {
+        // Son par défaut
+        audio = new Audio('/alarm-sound.mp3');
+        await audio.play();
+      }
+    } catch (error) {
+      console.error('Erreur lors de la lecture du son:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de jouer le son de l'alarme",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleAddAlarm = (alarmData: Omit<Alarm, "id" | "isActive">) => {
+    if (editingAlarm) {
+      const updatedAlarms = alarms.map((alarm) =>
+        alarm.id === editingAlarm.id
+          ? { ...alarm, ...alarmData }
+          : alarm
+      );
+      setAlarms(updatedAlarms);
+      localStorage.setItem("alarms", JSON.stringify(updatedAlarms));
+      toast({
+        title: "Alarme modifiée",
+        description: `L'alarme de ${alarmData.time} a été modifiée`,
+      });
+    } else {
+      const newAlarm: Alarm = {
+        id: Date.now().toString(),
+        ...alarmData,
+        isActive: true,
+      };
+      const updatedAlarms = [...alarms, newAlarm];
+      setAlarms(updatedAlarms);
+      localStorage.setItem("alarms", JSON.stringify(updatedAlarms));
+      toast({
+        title: "Alarme ajoutée",
+        description: `Nouvelle alarme configurée pour ${alarmData.time}`,
+      });
+    }
+    setEditingAlarm(undefined);
   };
 
   const handleDeleteAlarm = (id: string) => {
     const updatedAlarms = alarms.filter((alarm) => alarm.id !== id);
     setAlarms(updatedAlarms);
     localStorage.setItem("alarms", JSON.stringify(updatedAlarms));
-    
     toast({
       title: "Alarme supprimée",
       description: "L'alarme a été supprimée avec succès",
@@ -56,6 +112,24 @@ const Index = () => {
     );
     setAlarms(updatedAlarms);
     localStorage.setItem("alarms", JSON.stringify(updatedAlarms));
+    
+    const alarm = updatedAlarms.find((a) => a.id === id);
+    toast({
+      title: alarm?.isActive ? "Alarme activée" : "Alarme désactivée",
+      description: `L'alarme de ${alarm?.time} a été ${alarm?.isActive ? "activée" : "désactivée"}`,
+    });
+  };
+
+  const handleEditAlarm = (alarm: Alarm) => {
+    setEditingAlarm(alarm);
+    setDialogOpen(true);
+  };
+
+  const handleDialogClose = (open: boolean) => {
+    setDialogOpen(open);
+    if (!open) {
+      setEditingAlarm(undefined);
+    }
   };
 
   return (
@@ -71,13 +145,15 @@ const Index = () => {
           alarms={alarms}
           onDelete={handleDeleteAlarm}
           onToggle={handleToggleAlarm}
+          onEdit={handleEditAlarm}
         />
       )}
       <AddAlarmButton onClick={() => setDialogOpen(true)} />
       <AlarmDialog
         open={dialogOpen}
-        onOpenChange={setDialogOpen}
+        onOpenChange={handleDialogClose}
         onSave={handleAddAlarm}
+        editingAlarm={editingAlarm}
       />
     </div>
   );
