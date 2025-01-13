@@ -3,10 +3,13 @@ import { Alarm } from "@/components/AlarmList";
 import AlarmList from "@/components/AlarmList";
 import AddAlarmButton from "@/components/AddAlarmButton";
 import AlarmDialog from "@/components/AlarmDialog";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
-  const [alarms, setAlarms] = useState<Alarm[]>([]);
+  const [alarms, setAlarms] = useState<Alarm[]>(() => {
+    const savedAlarms = localStorage.getItem("alarms");
+    return savedAlarms ? JSON.parse(savedAlarms) : [];
+  });
   const [dialogOpen, setDialogOpen] = useState(false);
   const { toast } = useToast();
 
@@ -26,7 +29,10 @@ const Index = () => {
       isActive: true,
       image,
     };
-    setAlarms([...alarms, newAlarm]);
+    const updatedAlarms = [...alarms, newAlarm];
+    setAlarms(updatedAlarms);
+    localStorage.setItem("alarms", JSON.stringify(updatedAlarms));
+    
     toast({
       title: "Alarme ajoutée",
       description: `Nouvelle alarme configurée pour ${time}`,
@@ -34,7 +40,10 @@ const Index = () => {
   };
 
   const handleDeleteAlarm = (id: string) => {
-    setAlarms(alarms.filter((alarm) => alarm.id !== id));
+    const updatedAlarms = alarms.filter((alarm) => alarm.id !== id);
+    setAlarms(updatedAlarms);
+    localStorage.setItem("alarms", JSON.stringify(updatedAlarms));
+    
     toast({
       title: "Alarme supprimée",
       description: "L'alarme a été supprimée avec succès",
@@ -42,11 +51,11 @@ const Index = () => {
   };
 
   const handleToggleAlarm = (id: string) => {
-    setAlarms(
-      alarms.map((alarm) =>
-        alarm.id === id ? { ...alarm, isActive: !alarm.isActive } : alarm
-      )
+    const updatedAlarms = alarms.map((alarm) =>
+      alarm.id === id ? { ...alarm, isActive: !alarm.isActive } : alarm
     );
+    setAlarms(updatedAlarms);
+    localStorage.setItem("alarms", JSON.stringify(updatedAlarms));
   };
 
   return (
