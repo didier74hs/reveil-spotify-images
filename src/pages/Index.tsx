@@ -44,17 +44,15 @@ const Index = () => {
     document.body.style.backgroundPosition = 'center';
 
     try {
-      let audio: HTMLAudioElement;
-      
       if (alarm.spotifyPlaylistUrl) {
-        // Ouvrir Spotify directement
-        window.open(alarm.spotifyPlaylistUrl, '_blank');
+        // Ouvrir Spotify directement avec la playlist
+        window.location.href = alarm.spotifyPlaylistUrl;
       } else if (alarm.soundUrl) {
-        audio = new Audio(alarm.soundUrl);
+        const audio = new Audio(alarm.soundUrl);
         await audio.play();
       } else {
         // Son par défaut
-        audio = new Audio('/alarm-sound.mp3');
+        const audio = new Audio('/alarm-sound.mp3');
         await audio.play();
       }
 

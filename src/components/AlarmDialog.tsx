@@ -15,8 +15,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Alarm } from "./AlarmList";
 import { compressImage } from "../utils/imageUtils";
 import { useToast } from "../hooks/use-toast";
-import SpotifyAuthButton from "./SpotifyAuthButton";
-import { useSpotifyAuth } from "../hooks/useSpotifyAuth";
 
 interface AlarmDialogProps {
   open: boolean;
@@ -49,7 +47,6 @@ const AlarmDialog = ({ open, onOpenChange, onSave, editingAlarm }: AlarmDialogPr
   const [soundUrl, setSoundUrl] = useState("");
   const [spotifyPlaylistUrl, setSpotifyPlaylistUrl] = useState("");
   const { toast } = useToast();
-  const { token: spotifyToken } = useSpotifyAuth();
 
   useEffect(() => {
     if (editingAlarm) {
@@ -245,19 +242,15 @@ const AlarmDialog = ({ open, onOpenChange, onSave, editingAlarm }: AlarmDialogPr
                 </div>
               </div>
             ) : (
-              <>
-                {!spotifyToken ? (
-                  <SpotifyAuthButton />
-                ) : (
-                  <Input
-                    type="url"
-                    placeholder="URL de la playlist Spotify"
-                    value={spotifyPlaylistUrl}
-                    onChange={(e) => setSpotifyPlaylistUrl(e.target.value)}
-                    className="bg-muted/5"
-                  />
-                )}
-              </>
+              <Input
+                type="url"
+                placeholder="URL de la playlist Spotify (spotify:playlist:...)"
+                value={spotifyPlaylistUrl}
+                onChange={(e) => setSpotifyPlaylistUrl(e.target.value)}
+                className="bg-muted/5"
+                pattern="spotify:playlist:[a-zA-Z0-9]+"
+                title="Format: spotify:playlist:XXXXXXXXXXXXXXXX"
+              />
             )}
           </div>
         </div>
