@@ -13,13 +13,8 @@ import { ToggleGroup, ToggleGroupItem } from "./ui/toggle-group";
 import { ImagePlus, Music } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Alarm } from "./AlarmList";
-
-interface AlarmDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onSave: (alarm: Omit<Alarm, "id" | "isActive">) => void;
-  editingAlarm?: Alarm;
-}
+import { compressImage } from "../utils/imageUtils";
+import { useToast } from "../hooks/use-toast";
 
 const DAYS = [
   { label: "L", value: "Lun" },
@@ -44,6 +39,7 @@ const AlarmDialog = ({ open, onOpenChange, onSave, editingAlarm }: AlarmDialogPr
   const [soundType, setSoundType] = useState(SOUND_TYPES.LOCAL);
   const [soundUrl, setSoundUrl] = useState("");
   const [spotifyPlaylistUrl, setSpotifyPlaylistUrl] = useState("");
+  const { toast } = useToast();
 
   useEffect(() => {
     if (editingAlarm) {
@@ -57,44 +53,71 @@ const AlarmDialog = ({ open, onOpenChange, onSave, editingAlarm }: AlarmDialogPr
     }
   }, [editingAlarm]);
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
-        setSelectedImage(base64String);
-        setPreviewImage(base64String);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleSoundChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setSoundUrl(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      try {
+        const reader = new FileReader();
+        reader.onloadend = async () => {
+          const base64String = reader.result as string;
+          const compressedImage = await compressImage(base64String);
+          setSelectedImage(compressedImage);
+          setPreviewImage(compressedImage);
+        };
+        reader.readAsDataURL(file);
+      } catch (error) {
+        toast({
+          title: "Erreur",
+          description: "Impossible de traiter l'image. Veuillez réessayer avec une image plus petite.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
   const handleSave = () => {
     if (!time) {
-      alert("Veuillez sélectionner une heure");
+      toast({
+        title: "Erreur",
+        description: "Veuillez sélectionner une heure",
+        variant: "destructive",
+      });
       return;
     }
-    onSave({
-      time,
-      days: selectedDays,
-      image: selectedImage || "/placeholder.svg",
-      soundUrl: soundType === SOUND_TYPES.LOCAL ? soundUrl : "",
-      spotifyPlaylistUrl: soundType === SOUND_TYPES.SPOTIFY ? spotifyPlaylistUrl : "",
-    });
-    resetForm();
-    onOpenChange(false);
+
+    try {
+      const alarmData = {
+        time,
+        days: selectedDays,
+        image: selectedImage || "/placeholder.svg",
+        soundUrl: soundType === SOUND_TYPES.LOCAL ? soundUrl : "",
+        spotifyPlaylistUrl: soundType === SOUND_TYPES.SPOTIFY ? spotifyPlaylistUrl : "",
+      };
+
+      // Test localStorage capacity
+      const testKey = "test_storage";
+      try {
+        localStorage.setItem(testKey, "test");
+        localStorage.removeItem(testKey);
+      } catch (e) {
+        toast({
+          title: "Erreur de stockage",
+          description: "L'espace de stockage est plein. Veuillez supprimer d'anciennes alarmes.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      onSave(alarmData);
+      resetForm();
+      onOpenChange(false);
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue lors de la sauvegarde de l'alarme",
+        variant: "destructive",
+      });
+    }
   };
 
   const resetForm = () => {
