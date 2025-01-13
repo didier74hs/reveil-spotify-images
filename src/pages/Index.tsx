@@ -38,6 +38,7 @@ const Index = () => {
 
   const triggerAlarm = async (alarm: Alarm) => {
     setActiveAlarm(alarm);
+    // Définir l'image de fond
     document.body.style.backgroundImage = `url(${alarm.image})`;
     document.body.style.backgroundSize = 'cover';
     document.body.style.backgroundPosition = 'center';
@@ -46,7 +47,7 @@ const Index = () => {
       let audio: HTMLAudioElement;
       
       if (alarm.spotifyPlaylistUrl) {
-        // Intégration Spotify - Nécessite une authentification
+        // Ouvrir Spotify directement
         window.open(alarm.spotifyPlaylistUrl, '_blank');
       } else if (alarm.soundUrl) {
         audio = new Audio(alarm.soundUrl);
@@ -56,6 +57,11 @@ const Index = () => {
         audio = new Audio('/alarm-sound.mp3');
         await audio.play();
       }
+
+      toast({
+        title: "Alarme !",
+        description: `Il est ${alarm.time}`,
+      });
     } catch (error) {
       console.error('Erreur lors de la lecture du son:', error);
       toast({
