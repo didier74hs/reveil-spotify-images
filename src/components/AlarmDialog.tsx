@@ -16,6 +16,13 @@ import { Alarm } from "./AlarmList";
 import { compressImage } from "../utils/imageUtils";
 import { useToast } from "../hooks/use-toast";
 
+interface AlarmDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSave: (alarm: Omit<Alarm, "id" | "isActive">) => void;
+  editingAlarm?: Alarm;
+}
+
 const DAYS = [
   { label: "L", value: "Lun" },
   { label: "M", value: "Mar" },
@@ -72,6 +79,17 @@ const AlarmDialog = ({ open, onOpenChange, onSave, editingAlarm }: AlarmDialogPr
           variant: "destructive",
         });
       }
+    }
+  };
+
+  const handleSoundChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setSoundUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
