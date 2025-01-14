@@ -3,7 +3,6 @@ import { Alarm } from "@/components/AlarmList";
 import AlarmList from "@/components/AlarmList";
 import AddAlarmButton from "@/components/AddAlarmButton";
 import AlarmDialog from "@/components/AlarmDialog";
-import { useToast } from "@/hooks/use-toast";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
@@ -14,7 +13,6 @@ const Index = () => {
   });
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingAlarm, setEditingAlarm] = useState<Alarm | undefined>();
-  const { toast: useToaster } = useToast();
   const [activeAlarm, setActiveAlarm] = useState<Alarm | null>(null);
 
   useEffect(() => {
@@ -46,7 +44,6 @@ const Index = () => {
 
     try {
       if (alarm.spotifyPlaylistUrl) {
-        // Ouvrir Spotify directement avec la playlist et démarrer la lecture
         const spotifyWindow = window.open(alarm.spotifyPlaylistUrl, '_blank');
         if (spotifyWindow) {
           spotifyWindow.focus();
@@ -59,15 +56,14 @@ const Index = () => {
         await audio.play();
       }
 
-      // Afficher le toast avec les boutons d'action
       toast("Réveil !", {
         description: `Il est ${alarm.time}`,
-        duration: Infinity, // Le toast reste affiché jusqu'à ce qu'on le ferme
+        duration: Infinity,
         action: {
           label: "Arrêter",
           onClick: () => stopAlarm(alarm),
         },
-        onDismiss: () => {}, // Empêche la fermeture en cliquant à l'extérieur
+        onDismiss: () => {},
         cancel: {
           label: "Reporter (5min)",
           onClick: () => snoozeAlarm(alarm),
@@ -75,11 +71,7 @@ const Index = () => {
       });
     } catch (error) {
       console.error('Erreur lors de la lecture du son:', error);
-      useToaster({
-        title: "Erreur",
-        description: "Impossible de jouer le son de l'alarme",
-        variant: "destructive",
-      });
+      toast.error("Impossible de jouer le son de l'alarme");
     }
   };
 
@@ -90,7 +82,6 @@ const Index = () => {
   };
 
   const snoozeAlarm = (alarm: Alarm) => {
-    // Reporter l'alarme de 5 minutes
     const [hours, minutes] = alarm.time.split(':').map(Number);
     const alarmTime = new Date();
     alarmTime.setHours(hours);
@@ -102,14 +93,11 @@ const Index = () => {
       time: `${String(alarmTime.getHours()).padStart(2, '0')}:${String(alarmTime.getMinutes()).padStart(2, '0')}`,
     };
 
-    // Mettre à jour l'alarme dans la liste
     const updatedAlarms = alarms.map(a => a.id === alarm.id ? newAlarm : a);
     setAlarms(updatedAlarms);
     localStorage.setItem("alarms", JSON.stringify(updatedAlarms));
 
-    // Arrêter l'alarme actuelle
     stopAlarm(alarm);
-
     toast.success("Alarme reportée de 5 minutes");
   };
 
@@ -122,10 +110,7 @@ const Index = () => {
       );
       setAlarms(updatedAlarms);
       localStorage.setItem("alarms", JSON.stringify(updatedAlarms));
-      toast({
-        title: "Alarme modifiée",
-        description: `L'alarme de ${alarmData.time} a été modifiée`,
-      });
+      toast.success(`L'alarme de ${alarmData.time} a été modifiée`);
     } else {
       const newAlarm: Alarm = {
         id: Date.now().toString(),
@@ -135,10 +120,7 @@ const Index = () => {
       const updatedAlarms = [...alarms, newAlarm];
       setAlarms(updatedAlarms);
       localStorage.setItem("alarms", JSON.stringify(updatedAlarms));
-      toast({
-        title: "Alarme ajoutée",
-        description: `Nouvelle alarme configurée pour ${alarmData.time}`,
-      });
+      toast.success(`Nouvelle alarme configurée pour ${alarmData.time}`);
     }
     setEditingAlarm(undefined);
   };
@@ -147,10 +129,7 @@ const Index = () => {
     const updatedAlarms = alarms.filter((alarm) => alarm.id !== id);
     setAlarms(updatedAlarms);
     localStorage.setItem("alarms", JSON.stringify(updatedAlarms));
-    toast({
-      title: "Alarme supprimée",
-      description: "L'alarme a été supprimée avec succès",
-    });
+    toast.success("L'alarme a été supprimée avec succès");
   };
 
   const handleToggleAlarm = (id: string) => {
@@ -161,10 +140,7 @@ const Index = () => {
     localStorage.setItem("alarms", JSON.stringify(updatedAlarms));
     
     const alarm = updatedAlarms.find((a) => a.id === id);
-    toast({
-      title: alarm?.isActive ? "Alarme activée" : "Alarme désactivée",
-      description: `L'alarme de ${alarm?.time} a été ${alarm?.isActive ? "activée" : "désactivée"}`,
-    });
+    toast.success(`L'alarme de ${alarm?.time} a été ${alarm?.isActive ? "activée" : "désactivée"}`);
   };
 
   const handleEditAlarm = (alarm: Alarm) => {
