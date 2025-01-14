@@ -4,6 +4,8 @@ import AlarmList from "@/components/AlarmList";
 import AddAlarmButton from "@/components/AddAlarmButton";
 import AlarmDialog from "@/components/AlarmDialog";
 import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 
 const Index = () => {
   const [alarms, setAlarms] = useState<Alarm[]>(() => {
@@ -12,7 +14,7 @@ const Index = () => {
   });
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingAlarm, setEditingAlarm] = useState<Alarm | undefined>();
-  const { toast } = useToast();
+  const { toast: useToaster } = useToast();
   const [activeAlarm, setActiveAlarm] = useState<Alarm | null>(null);
 
   useEffect(() => {
@@ -38,36 +40,77 @@ const Index = () => {
 
   const triggerAlarm = async (alarm: Alarm) => {
     setActiveAlarm(alarm);
-    // Définir l'image de fond
     document.body.style.backgroundImage = `url(${alarm.image})`;
     document.body.style.backgroundSize = 'cover';
     document.body.style.backgroundPosition = 'center';
 
     try {
       if (alarm.spotifyPlaylistUrl) {
-        // Ouvrir Spotify directement avec la playlist
-        window.location.href = alarm.spotifyPlaylistUrl;
+        // Ouvrir Spotify directement avec la playlist et démarrer la lecture
+        const spotifyWindow = window.open(alarm.spotifyPlaylistUrl, '_blank');
+        if (spotifyWindow) {
+          spotifyWindow.focus();
+        }
       } else if (alarm.soundUrl) {
         const audio = new Audio(alarm.soundUrl);
         await audio.play();
       } else {
-        // Son par défaut
         const audio = new Audio('/alarm-sound.mp3');
         await audio.play();
       }
 
-      toast({
-        title: "Alarme !",
+      // Afficher le toast avec les boutons d'action
+      toast("Réveil !", {
         description: `Il est ${alarm.time}`,
+        duration: Infinity, // Le toast reste affiché jusqu'à ce qu'on le ferme
+        action: {
+          label: "Arrêter",
+          onClick: () => stopAlarm(alarm),
+        },
+        onDismiss: () => {}, // Empêche la fermeture en cliquant à l'extérieur
+        cancel: {
+          label: "Reporter (5min)",
+          onClick: () => snoozeAlarm(alarm),
+        },
       });
     } catch (error) {
       console.error('Erreur lors de la lecture du son:', error);
-      toast({
+      useToaster({
         title: "Erreur",
         description: "Impossible de jouer le son de l'alarme",
         variant: "destructive",
       });
     }
+  };
+
+  const stopAlarm = (alarm: Alarm) => {
+    setActiveAlarm(null);
+    document.body.style.backgroundImage = '';
+    toast.dismiss();
+  };
+
+  const snoozeAlarm = (alarm: Alarm) => {
+    // Reporter l'alarme de 5 minutes
+    const [hours, minutes] = alarm.time.split(':').map(Number);
+    const alarmTime = new Date();
+    alarmTime.setHours(hours);
+    alarmTime.setMinutes(minutes);
+    alarmTime.setMinutes(alarmTime.getMinutes() + 5);
+
+    const newAlarm: Alarm = {
+      ...alarm,
+      time: `${String(alarmTime.getHours()).padStart(2, '0')}:${String(alarmTime.getMinutes()).padStart(2, '0')}`,
+    };
+
+    // Mettre à jour l'alarme dans la liste
+    const updatedAlarms = alarms.map(a => a.id === alarm.id ? newAlarm : a);
+    setAlarms(updatedAlarms);
+    localStorage.setItem("alarms", JSON.stringify(updatedAlarms));
+
+    // Arrêter l'alarme actuelle
+    stopAlarm(alarm);
+
+    toast.success("Alarme reportée de 5 minutes");
   };
 
   const handleAddAlarm = (alarmData: Omit<Alarm, "id" | "isActive">) => {
