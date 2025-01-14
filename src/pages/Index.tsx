@@ -43,32 +43,45 @@ const Index = () => {
     document.body.style.backgroundPosition = 'center';
 
     try {
-      if (alarm.spotifyPlaylistUrl) {
-        const spotifyWindow = window.open(alarm.spotifyPlaylistUrl, '_blank');
-        if (spotifyWindow) {
-          spotifyWindow.focus();
-        }
-      } else if (alarm.soundUrl) {
-        const audio = new Audio(alarm.soundUrl);
-        await audio.play();
-      } else {
-        const audio = new Audio('/alarm-sound.mp3');
-        await audio.play();
-      }
+      // Jouer un son d'alarme classique d'abord
+      const audio = new Audio('/alarm-sound.mp3');
+      await audio.play();
 
-      toast("Réveil !", {
-        description: `Il est ${alarm.time}`,
-        duration: Infinity,
-        action: {
-          label: "Arrêter",
-          onClick: () => stopAlarm(alarm),
-        },
-        onDismiss: () => {},
-        cancel: {
-          label: "Reporter (5min)",
-          onClick: () => snoozeAlarm(alarm),
-        },
-      });
+      if (alarm.spotifyPlaylistUrl) {
+        toast("Réveil !", {
+          description: `Il est ${alarm.time}. Cliquez ici pour lancer Spotify.`,
+          duration: Infinity,
+          action: {
+            label: "Lancer Spotify",
+            onClick: () => {
+              const spotifyWindow = window.open(alarm.spotifyPlaylistUrl, '_blank');
+              if (spotifyWindow) {
+                spotifyWindow.focus();
+              }
+              stopAlarm(alarm);
+            },
+          },
+          onDismiss: () => {},
+          cancel: {
+            label: "Reporter (5min)",
+            onClick: () => snoozeAlarm(alarm),
+          },
+        });
+      } else {
+        toast("Réveil !", {
+          description: `Il est ${alarm.time}`,
+          duration: Infinity,
+          action: {
+            label: "Arrêter",
+            onClick: () => stopAlarm(alarm),
+          },
+          onDismiss: () => {},
+          cancel: {
+            label: "Reporter (5min)",
+            onClick: () => snoozeAlarm(alarm),
+          },
+        });
+      }
     } catch (error) {
       console.error('Erreur lors de la lecture du son:', error);
       toast.error("Impossible de jouer le son de l'alarme");
